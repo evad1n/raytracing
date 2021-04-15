@@ -27,8 +27,6 @@ impl Color {
 }
 
 fn main() {
-    // output_ppm();
-
     let c = Color { r: 1, g: 2, b: 3 };
 
     println!("{:?}", c);
