@@ -1,10 +1,13 @@
+mod vector3;
+use vector3::*;
+
 use std::fmt;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-static width: usize = 100;
-static height: usize = 100;
+static WIDTH: usize = 100;
+static HEIGHT: usize = 100;
 
 #[derive(Debug, Default, Clone)]
 struct Color {
@@ -27,24 +30,25 @@ impl Color {
 }
 
 fn main() {
-    let c = Color { r: 1, g: 2, b: 3 };
+    // let pixels = create_data();
+    // write_ppm(pixels, "test.ppm");
 
-    println!("{:?}", c);
-    println!("{}", c);
+    let a = vec3(1.0, 2.0, 3.0);
 
-    let pixels = create_data();
+    let b = vec3(3.0, 2.0, 1.0);
 
-    write_ppm(pixels, "test.ppm");
+    println!("{:?}", a * 3.0);
+    println!("{:?}", 3.0 * a);
 }
 
 fn create_data() -> Vec<Vec<Color>> {
-    let mut pixels: Vec<Vec<Color>> = vec![vec![Color::default(); width as usize]; height as usize];
+    let mut pixels: Vec<Vec<Color>> = vec![vec![Color::default(); WIDTH as usize]; HEIGHT as usize];
 
-    for j in (0..height).rev() {
-        for i in 0..width {
-            let r: f32 = (i as f32) / (width as f32);
-            let g: f32 = (j as f32) / (height as f32);
-            let b: f32 = ((i * j) as f32) / ((width * height) as f32);
+    for j in (0..HEIGHT).rev() {
+        for i in 0..WIDTH {
+            let r: f32 = (i as f32) / (WIDTH as f32);
+            let g: f32 = (j as f32) / (HEIGHT as f32);
+            let b: f32 = ((i * j) as f32) / ((WIDTH * HEIGHT) as f32);
 
             pixels[i][j] = Color {
                 r: (r * 256.0) as u8,
@@ -68,7 +72,7 @@ fn write_ppm(pixels: Vec<Vec<Color>>, file_name: &str) {
     };
 
     // PPM header
-    let header = format!("P3\n{} {}\n255\n", width, height);
+    let header = format!("P3\n{} {}\n255\n", WIDTH, HEIGHT);
 
     let pixel_lines: Vec<String> = pixels
         .into_iter()
