@@ -3,19 +3,26 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-static width: i32 = 256;
-static height: i32 = 256;
+static width: usize = 100;
+static height: usize = 100;
 
-#[derive(Debug)]
+#[derive(Debug, Default, Clone)]
 struct Color {
     r: u8,
     g: u8,
     b: u8,
 }
 
+// One line per pixel in PPM format
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{{{}, {}, {}}}", self.r, self.g, self.b)
+    }
+}
+
+impl Color {
+    fn to_ppm(&self) -> String {
+        format!("{} {} {}\n", self.r, self.g, self.b)
     }
 }
 
@@ -26,68 +33,61 @@ fn main() {
 
     println!("{:?}", c);
     println!("{}", c);
+
+    let pixels = create_data();
+
+    write_ppm(pixels, "test.ppm");
 }
 
-fn output_ppm() {
-    let (w, h) = (256, 256);
+fn create_data() -> Vec<Vec<Color>> {
+    let mut pixels: Vec<Vec<Color>> = vec![vec![Color::default(); width as usize]; height as usize];
 
-    println!("P3\n{} {}\n255", w, h);
+    for j in (0..height).rev() {
+        for i in 0..width {
+            let r: f32 = (i as f32) / (width as f32);
+            let g: f32 = (j as f32) / (height as f32);
+            let b: f32 = ((i * j) as f32) / ((width * height) as f32);
 
-    for j in (0..h).rev() {
-        println!("{} remaining...", h - j);
-        for i in 0..w {
-            let r: f32 = (i as f32) / (w as f32);
-            let g: f32 = (j as f32) / (h as f32);
-            let b: f32 = ((i * j) as f32) / ((w * h) as f32);
-
-            println!(
-                "{} {} {}",
-                (r * 256.0) as i32,
-                (g * 256.0) as i32,
-                (b * 256.0) as i32
-            );
+            pixels[i][j] = Color {
+                r: (r * 256.0) as u8,
+                g: (g * 256.0) as u8,
+                b: (b * 256.0) as u8,
+            }
         }
     }
+
+    return pixels;
 }
 
-// fn create_data() -> Vec<Vec<u8>> {
-//     let mut pixels = vec![vec![0; width as usize]; height as usize];
+fn write_ppm(pixels: Vec<Vec<Color>>, file_name: &str) {
+    let path = Path::new(file_name);
+    let display = path.display();
+    println!("Writing data as PPM to {}", display);
 
-//     for j in (0..height).rev() {
-//         for i in 0..width {
-//             let r: f32 = (i as f32) / (width as f32);
-//             let g: f32 = (j as f32) / (height as f32);
-//             let b: f32 = ((i * j) as f32) / ((width * height) as f32);
+    let mut file = match File::create(path) {
+        Err(why) => panic!("couldn't create {}: {}", display, why),
+        Ok(file) => file,
+    };
 
-//             pixels[i][j] = println!(
-//                 "{} {} {}",
-//                 (r * 256.0) as i32,
-//                 (g * 256.0) as i32,
-//                 (b * 256.0) as i32
-//             );
-//         }
-//     }
+    // PPM header
+    let header = format!("P3\n{} {}\n255\n", width, height);
 
-//     return pixels;
-// }
+    let pixel_lines: Vec<String> = pixels
+        .into_iter()
+        .flat_map(|row| row.into_iter().map(|p| p.to_ppm()))
+        .collect();
 
-// fn write_ppm(width: i32, height: i32, pixels: Vec<u8>, file_name: &str) {
-//     let path = Path::new(file_name);
-//     let display = path.display();
-//     println!("Writing data as PPM to {}", display);
+    let data = [
+        header.into_bytes(),
+        pixel_lines
+            .into_iter()
+            .flat_map(|line| line.into_bytes())
+            .collect(),
+    ]
+    .concat();
 
-//     let mut file = match File::create(path) {
-//         Err(why) => panic!("couldn't create {}: {}", display, why),
-//         Ok(file) => file,
-//     };
-
-//     // PPM header
-//     let header = format!("P3\n{} {}\n255", width, height);
-
-//     let data = [header.into_bytes(), pixels].concat();
-
-//     match file.write_all(&data) {
-//         Err(why) => panic!("couldn't write to {}: {}", display, why),
-//         Ok(_) => println!("successfully wrote to {}", display),
-//     }
-// }
+    match file.write_all(&data) {
+        Err(why) => panic!("couldn't write to {}: {}", display, why),
+        Ok(_) => println!("successfully wrote to {}", display),
+    }
+}
