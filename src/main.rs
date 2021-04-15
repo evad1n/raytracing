@@ -1,4 +1,6 @@
+mod color;
 mod vector3;
+use color::*;
 use vector3::*;
 
 use std::fmt;
@@ -8,26 +10,6 @@ use std::path::Path;
 
 static WIDTH: usize = 100;
 static HEIGHT: usize = 100;
-
-#[derive(Debug, Default, Clone)]
-struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
-}
-
-// One line per pixel in PPM format
-impl fmt::Display for Color {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{{}, {}, {}}}", self.r, self.g, self.b)
-    }
-}
-
-impl Color {
-    fn to_ppm(&self) -> String {
-        format!("{} {} {}\n", self.r, self.g, self.b)
-    }
-}
 
 fn main() {
     // let pixels = create_data();
@@ -50,11 +32,7 @@ fn create_data() -> Vec<Vec<Color>> {
             let g: f32 = (j as f32) / (HEIGHT as f32);
             let b: f32 = ((i * j) as f32) / ((WIDTH * HEIGHT) as f32);
 
-            pixels[i][j] = Color {
-                r: (r * 256.0) as u8,
-                g: (g * 256.0) as u8,
-                b: (b * 256.0) as u8,
-            }
+            pixels[i][j] = color((r * 256.0) as u8, (g * 256.0) as u8, (b * 256.0) as u8)
         }
     }
 
